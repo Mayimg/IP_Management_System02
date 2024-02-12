@@ -18,5 +18,6 @@ urlpatterns = [
     path('subnets/<int:pk>/ipaddresses/', views.SubnetDetailView.as_view(), name='subnet-ipaddress-list'),
     path('devices/<int:pk>/ipaddresses/', views.DeviceDetailView.as_view(), name='device-ipaddress-list'),
     path('ping_ip/', views.ping_ip, name='ping-ip'),
+    path('download_excel/', views.download_excel_file, name='download_excel'),
     # その他のURLパターン...
 ]

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "37cdf54df0bd0384658e387f31cc05922bd654928f4ff658ee5457b6c9f0093e"
+            "sha256": "e20f8d7589478cee564550ae4d6e5ef221d4a7dca15edb07fb993842cbd7a78f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -27,12 +27,12 @@
         },
         "django": {
             "hashes": [
-                "sha256:8c8659665bc6e3a44fefe1ab0a291e5a3fb3979f9a8230be29de975e57e8f854",
-                "sha256:f47a37a90b9bbe2c8ec360235192c7fddfdc832206fcf618bb849b39256affc1"
+                "sha256:56ab63a105e8bb06ee67381d7b65fe6774f057e41a8bab06c8020c8882d8ecd4",
+                "sha256:b5bb1d11b2518a5f91372a282f24662f58f66749666b0a286ab057029f728080"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.10'",
-            "version": "==5.0.1"
+            "version": "==5.0.2"
         },
         "django-environ": {
             "hashes": [
@@ -137,6 +137,15 @@
             ],
             "markers": "python_version < '3.11'",
             "version": "==4.9.0"
+        },
+        "xlsxwriter": {
+            "hashes": [
+                "sha256:b61c1a0c786f82644936c0936ec96ee96cd3afb9440094232f7faef9b38689f0",
+                "sha256:de810bf328c6a4550f4ffd6b0b34972aeb7ffcf40f3d285a0413734f9b63a929"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.6'",
+            "version": "==3.1.9"
         }
     },
     "develop": {}

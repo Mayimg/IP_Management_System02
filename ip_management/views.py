@@ -11,6 +11,8 @@ from .models import Device
 from .forms import DeviceForm
 from django.views.generic import DetailView
 from django.http import JsonResponse
+from django.http import HttpResponse
+from .utils import export_to_excel
 
 # Create your views here.
 
@@ -120,3 +122,12 @@ def ping_ip(request):
             ip.save()
         return JsonResponse({"status": "success"})
     return JsonResponse({"status": "error"})
+
+def download_excel_file(request):
+    excel_file = export_to_excel()
+    response = HttpResponse(
+        excel_file.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="IP_Management_System_Data.xlsx"'
+    return response
