@@ -1,0 +1,100 @@
+<!-- Bootstrap CSS の CDN リンク -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+<!-- Bootstrap JavaScript と依存する Popper.js の CDN リンク -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+
+<!-- DataTables JavaScript -->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+
+{% extends 'base.html' %}
+{% load subnet_filters %} <!-- フィルタをロード -->
+
+{% block content %}
+    <h2 style="font-size: 50px;" >IP Address List</h2>
+    <button id="update-status" class="btn btn-secondary">Update Status</button>
+    <br><br>
+    <a href="{% url 'device-add' %}" class="btn btn-outline-primary" role="button" style="font-size: 25px;" target="_blank"> Add Device </a>
+    <a href="{% url 'subnet-add' %}" class="btn btn-outline-primary" role="button" style="font-size: 25px;" target="_blank"> Add Subnet </a>
+    <a href="{% url 'ipaddress-add' %}" class="btn btn-outline-primary" role="button" style="font-size: 25px;" target="_blank"> Add IP Address </a>
+    <br><br>
+    <table style = "width: 100%; border-collapse: collapse;" class="table table-striped">
+        <thead>
+            <tr>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">IP Address</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Subnet</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Domein Name</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Device</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Description</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ipaddress in ipaddresses %}
+                <tr>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ ipaddress.ip_address }}</td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{% cidr_notation ipaddress.subnet.network_address ipaddress.subnet.subnet_mask %}</td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ ipaddress.domain_name }}</td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ ipaddress.device.hostname}}</td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ ipaddress.description }}</td>
+                    <td td style = "border-bottom: 1px solid #ddd; padding: 8px;">
+                        {% if ipaddress.last_ping_status %}
+                        <span class="text-success">Online</span>
+                        {% else %}
+                        <span class="text-danger">Offline</span>
+                        {% endif %}
+                    </td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">
+                        <a href = "{% url 'ipaddress-update' ipaddress.id %}" class="btn btn-outline-primary" role="button" target="_blank">Edit</a>
+                        <a href = "{% url 'ipaddress-delete' ipaddress.id %}" class = "delete-link; btn btn-outline-primary">Delete</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan = "6" style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: center;">No IP addresses available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br> 
+    <a href="{% url 'subnet-list' %}">Subnet List</a><br>
+    <a href="{% url 'device-list' %}">Device List</a><br>
+    <a href="{% url 'ipaddress-list' %}">IP Address List</a><br>
+    
+    <script>
+        $(document).ready( function () {
+            $('.table').DataTable();
+        } );
+    </script>
+
+    <script>
+    document.getElementById('update-status').addEventListener('click', function() {
+        fetch("{% url 'ping-ip' %}", {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest', // AJAXリクエストを示す
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'success') {
+                // 成功したらページをリロードする
+                location.reload();
+            } else {
+                // エラー処理
+                console.error('Error updating status');
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
+    </script>
+{% endblock %}
+

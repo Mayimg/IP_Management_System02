@@ -1,0 +1,43 @@
+<!-- subnet_detail.html -->
+{% extends 'base.html' %}
+
+
+{% block content %}
+  <h2>IP Addresses for Device: {{ device.hostname }}</h2>
+  <a href = "{% url 'ipaddress-add' %}">Add IP Address</a>
+    <table style = "width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">IP Address</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Domein Name</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Device</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Description</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ipaddress in ipaddresses %}
+                <tr>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ ipaddress.ip_address }}</td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ ipaddress.domain_name }}</td>
+                    <td style = "border-bottom: 1px solid #add; padding: 8px;">{{ ipaddress.device.hostname}}</td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ ipaddress.description }}</td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">
+                        <a href = "{% url 'ipaddress-update' ipaddress.id %}">Edit</a> |
+                        <a href = "{% url 'ipaddress-delete' ipaddress.id %}" class = "delete-link">Delete</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan = "3" style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: center;">No IP addresses available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href = "{% url 'subnet-list' %}">Subnet List</a><br>
+    <a href = "{% url 'device-list' %}">Device List</a><br>
+    <a href = "{% url 'ipaddress-list' %}">IP Address List</a><br>
+
+
+{% endblock %}

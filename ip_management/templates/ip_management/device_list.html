@@ -1,0 +1,96 @@
+<!-- Bootstrap CSS の CDN リンク -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+<!-- Bootstrap JavaScript と依存する Popper.js の CDN リンク -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+
+<!-- DataTables JavaScript -->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+
+{% extends "base.html" %}
+{% block content %}
+
+    <h2 style="font-size: 50px;" >Device List</h2>
+    <a href="{% url 'device-add' %}" class="btn btn-outline-primary" role="button" style="font-size: 25px;" target="_blank"> Add Device </a>
+    <a href="{% url 'subnet-add' %}" class="btn btn-outline-primary" role="button" style="font-size: 25px;" target="_blank"> Add Subnet </a>
+    <a href="{% url 'ipaddress-add' %}" class="btn btn-outline-primary" role="button" style="font-size: 25px;" target="_blank"> Add IP Address </a>
+    <br><br>
+    <table style = "width: 100%; border-collapse: collapse;" class="table table-striped">
+        <thead>
+            <tr>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Hostname</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Device Type</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Description</th>
+                <th style= "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">IP Addresses</th>
+                <th style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: left;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in devices %}
+                <tr>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">
+                        <!-- トグルボタン -->
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#subnet-{{ forloop.counter }}" aria-expanded="false" aria-controls="subnet-{{ forloop.counter }}">
+                            {{ device.hostname }}
+                        </button>
+                    </td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ device.device_type }}</td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">{{ device.description }}</td>
+                    <td style="border-bottom: 1px solid #ddd; padding: 8px;">
+                        <a href = "{% url 'device-ipaddress-list' device.id %}" class="btn btn-outline-primary" role="button" target="_blank">IP Addresses</a>
+                    </td>
+                    <td style = "border-bottom: 1px solid #ddd; padding: 8px;">
+                        <a href = "{% url 'device-update' device.id %}" class="btn btn-outline-primary" role="button" target="_blank">Edit</a>
+                        <a href = "{% url 'device-delete' device.id %}" class = "delete-link; btn btn-outline-primary">Delete</a>
+                </tr>
+                <tr>
+                    <td>
+                      <div id="subnet-{{ forloop.counter }}" class="collapse">
+                        <!-- サブネット内のIPアドレスをリスト表示 -->
+                        {% for ipaddress in device.ipaddress_set.all %}
+                        {{ ipaddress.ip_address }}<br>
+                        {% endfor %}
+                      </div>
+                    </td>
+                    <td>
+                      <div id="subnet-{{ forloop.counter }}" class="collapse">
+                        {% for ipaddress in device.ipaddress_set.all %}
+                        {{ ipaddress.device }}<br>
+                        {% endfor %}
+                      </div>
+                    </td>
+                    <td>
+                      <div id="subnet-{{ forloop.counter }}" class="collapse">
+                        {% for ipaddress in device.ipaddress_set.all %}
+                        {{ ipaddress.domain_name }}<br>
+                        {% endfor %}
+                      </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan = "3" style = "border-bottom: 1px solid #ddd; padding: 8px; text-align: center;">No devices available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="{% url 'subnet-list' %}">Subnet List</a><br>
+    <a href="{% url 'device-list' %}">Device List</a><br>
+    <a href="{% url 'ipaddress-list' %}">IP Address List</a><br>
+
+    <script>
+        $(document).ready( function () {
+            $('.table').DataTable();
+        } );
+    </script>
+
+{% endblock %}
+
+
+
