@@ -6,6 +6,11 @@ from .utils import prefix_length_to_subnet_mask
 from ipaddress import IPv4Network
 from .models import IPAddress
 from ipaddress import ip_network, ip_address
+from .models import IPAddressRange
+from django import forms
+from .models import Subnet
+from ipaddress import IPv4Network
+from .models import Device
 
 def generate_subnet_masks():
     # 255.255.255.255から始まり、0.0.0.0までのすべてのサブネットマスクを生成
@@ -22,10 +27,6 @@ def generate_subnet_masks():
                 subnet_masks.append(mask)
     return subnet_masks
 
-from django import forms
-from .models import Subnet
-from ipaddress import IPv4Network
-from .models import Device
 
 class SubnetForm(forms.ModelForm):
     prefix_length = forms.IntegerField(label='Prefix Length', min_value=0, max_value=32)
@@ -53,6 +54,20 @@ class SubnetForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+class IPAddressRangeForm(forms.ModelForm):
+    class Meta:
+        model = IPAddressRange
+        fields = ['subnet', 'purpose', 'start_ip_address', 'end_ip_address']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        subnet = cleaned_data.get('subnet')
+        start_ip_address = cleaned_data.get('start_ip_address')
+        end_ip_address = cleaned_data.get('end_ip_address')
+
+
+        
     
 class IPAddressForm(forms.ModelForm):
     class Meta:

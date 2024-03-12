@@ -12,6 +12,15 @@ class Device(models.Model):
 
     def __str__(self):
         return self.hostname
+    
+class IPAddressRange(models.Model):
+    subnet = models.ForeignKey('Subnet', on_delete=models.CASCADE)
+    purpose = models.CharField(max_length=255)
+    start_ip_address = models.CharField(max_length=15)
+    end_ip_address = models.CharField(max_length=15)
+
+    def __str__(self):
+        return f'{self.start_ip_address} - {self.end_ip_address}'
 
 class Subnet(models.Model):
     network_address = models.CharField(max_length=15)
