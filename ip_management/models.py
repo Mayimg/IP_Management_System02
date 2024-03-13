@@ -4,7 +4,7 @@ from ipaddress import ip_network
 # Create your models here.
 
 class Device(models.Model):
-    hostname = models.CharField(max_length=255, unique=True)
+    hostname = models.CharField(max_length=255, unique=True, null=False, blank=False)
     device_type = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     registered_at = models.DateTimeField(auto_now_add=True)
