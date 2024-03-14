@@ -16,10 +16,11 @@ class DeviceModelTest(TestCase):
         with self.assertRaises(IntegrityError):
             Device.objects.create(hostname='Router1', device_type='Router_Duplicate')
 
-    def test_hostname_blank(self):
-        with self.assertRaises(IntegrityError):
-            Device.objects.create(hostname='', device_type='Router')
-    
+    def test_hostname_blank(self): 
+       with self.assertRaises(ValidationError):
+        device = Device(hostname='', device_type='Router')
+        device.full_clean()
+
     def test_device_type_blank(self):
         Device.objects.create(hostname='Router1', device_type='')
         device = Device.objects.get(hostname='Router1')
@@ -50,6 +51,16 @@ class SubnetModelTest(TestCase):
         self.assertTrue(isinstance(subnet, Subnet))
         self.assertEqual(subnet.__str__(), subnet.network_address)
         self.assertEqual(subnet.get_prefix_length(), 8)
+
+    def test_invalid_subnet_creation(self):
+        with self.assertRaises(ValidationError):
+            subnet = Subnet.objects.create(network_address='999.0.0.0', subnet_mask='255.0.0.0')
+            subnet.full_clean()
+
+    def test_invalid_subnet_mask_creation(self):
+        with self.assertRaises(ValidationError):
+            subnet = Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.256')
+            subnet.full_clean()
 
     def test_subnet_unique_together(self):
         Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.0', description='Test 1')
