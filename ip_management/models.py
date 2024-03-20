@@ -65,10 +65,15 @@ class Subnet(models.Model):
     def clean_network_mask(self):
         ip_validation.validate_subnet_mask(self.subnet_mask)
 
+    def clean_network_address_is_network_address(self):
+        if not ip_validation.is_network_address(self.network_address, f'{self.network_address}/{self.get_prefix_length()}'):
+            raise ValidationError(f'{self.network_address} is not a valid network address for the subnet {self.network_address}/{self.get_prefix_length()}')
+
     def clean(self):
         cleaned_data = super().clean()
         self.clean_network_address()
         self.clean_network_mask()
+        self.clean_network_address_is_network_address()
         return cleaned_data
 
 
@@ -87,12 +92,27 @@ class IPAddress(models.Model):
         verbose_name_plural = 'IP Addresses'
         ordering = ['ip_address']  # IPアドレスで昇順に並べる
         
-
+    def __str__(self):
+        return self.ip_address
+    
     def clean_ip_address(self):
         ip_validation.validate_ipv4_address(self.ip_address)
 
-    def __str__(self):
-        return self.ip_address
+    def clean_ip_address_in_subnet(self):
+        ip_validation.validate_ip_in_subnet(self.ip_address, f'{self.subnet.network_address}/{self.subnet.get_prefix_length()}')
+
+    def clean_ip_address_is_host_address(self):
+        if not ip_validation.is_host_address(self.ip_address, f'{self.subnet.network_address}/{self.subnet.get_prefix_length()}'):
+            raise ValidationError(f'{self.ip_address} is not a valid host address for the subnet {self.subnet.network_address}/{self.subnet.get_prefix_length()}')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        self.clean_ip_address()
+        self.clean_ip_address_in_subnet()
+        self.clean_ip_address_is_host_address()
+        return cleaned_data
+
+    
 
 
 

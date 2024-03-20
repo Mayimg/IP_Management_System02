@@ -20,10 +20,10 @@ def validate_subnet(subnet):
     
 def validate_subnet_mask(subnet_mask):
     try:
-        mask = IPv4Address(subnet_mask)
-        if not mask.is_netmask:
+        mask = IPv4Network(f'0.0.0.0/{subnet_mask}', strict=False).netmask
+        if str(mask) != subnet_mask:
             raise ValidationError('Invalid IPv4 subnet mask')
-    except AddressValueError:
+    except (AddressValueError, NetmaskValueError):
         raise ValidationError('Invalid IPv4 subnet mask')
         
 def create_cidr_from_subnet(subnet, subnet_mask):
@@ -43,6 +43,39 @@ def validate_ip_in_subnet(ip_address, subnet_cidr):
         network = IPv4Network(subnet_cidr)
         if ip not in network:
             raise ValidationError(f'{ip_address} is not in {subnet_cidr}')
+    except (AddressValueError, NetmaskValueError):
+        raise ValidationError('Invalid IPv4 address or subnet')
+    
+def is_network_address(ip_address, subnet_cidr):
+    validate_ipv4_address(ip_address)
+    try:
+        ip = IPv4Address(ip_address)
+        network = IPv4Network(subnet_cidr, strict=False)
+        if ip == network.network_address:
+            return True
+        return False
+    except (AddressValueError, NetmaskValueError):
+        raise ValidationError('Invalid IPv4 address or subnet')
+
+def is_host_address(ip_address, subnet_cidr):
+    validate_ipv4_address(ip_address)
+    try:
+        ip = IPv4Address(ip_address)
+        network = IPv4Network(subnet_cidr, strict=False)
+        if ip == network.network_address or ip == network.broadcast_address:
+            return False
+        return True
+    except (AddressValueError, NetmaskValueError):
+        raise ValidationError('Invalid IPv4 address or subnet')
+
+def is_broadcast_address(ip_address, subnet_cidr):
+    validate_ipv4_address(ip_address)
+    try:
+        ip = IPv4Address(ip_address)
+        network = IPv4Network(subnet_cidr, strict=False)
+        if ip == network.broadcast_address:
+            return True
+        return False
     except (AddressValueError, NetmaskValueError):
         raise ValidationError('Invalid IPv4 address or subnet')
     

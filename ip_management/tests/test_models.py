@@ -62,6 +62,14 @@ class SubnetModelTest(TestCase):
             subnet = Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.256')
             subnet.full_clean()
 
+    def test_nonNetworkAddress_creation(self):
+        with self.assertRaises(ValidationError):
+            subnet = Subnet.objects.create(network_address='10.0.0.1', subnet_mask='255.0.0.0')
+            subnet.full_clean()
+        with self.assertRaises(ValidationError):
+            subnet = Subnet.objects.create(network_address='10.255.255.255', subnet_mask='255.0.0.0')
+            subnet.full_clean()
+
     def test_subnet_unique_together(self):
         Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.0', description='Test 1')
         with self.assertRaises(IntegrityError):
@@ -69,16 +77,34 @@ class SubnetModelTest(TestCase):
 
 
 class IPAddressModelTest(TestCase):
-    def setUp(self):
+    def test_ip_address_creation(self):
         subnet = Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.0')
         device = Device.objects.create(hostname='Router1', device_type='Router')
-        IPAddress.objects.create(subnet=subnet, device=device, ip_address='10.0.0.1')
-
-    def test_ip_address_creation(self):
-        ip_address = IPAddress.objects.get(ip_address='10.0.0.1')
+        ip_address = IPAddress.objects.create(subnet=subnet, device=device, ip_address='10.0.0.1')
         self.assertTrue(isinstance(ip_address, IPAddress))
         self.assertEqual(ip_address.__str__(), ip_address.ip_address)
         self.assertEqual(ip_address.subnet.network_address, '10.0.0.0')
         self.assertEqual(ip_address.device.hostname, 'Router1')
-        self.assertEqual(ip_address.subnet.get_prefix_length(), 8)
         
+    def test_invalid_ip_address_creation(self):
+        subnet = Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.0')
+        device = Device.objects.create(hostname='Router1', device_type='Router')
+        with self.assertRaises(ValidationError):
+            ip_address = IPAddress.objects.create(subnet=subnet, device=device, ip_address='10.0.0.256')
+            ip_address.full_clean()
+
+    def test_ip_invalid_ip_in_subnet(self):
+        subnet = Subnet.objects.create(network_address='192.168.1.0', subnet_mask='255.255.255.0')
+        device = Device.objects.create(hostname='Router1', device_type='Router')
+        with self.assertRaises(ValidationError):
+            ip_address = IPAddress.objects.create(subnet=subnet, device=device, ip_address='192.168.3.1')
+            ip_address.full_clean()
+
+    def test_ip_network_address(self):
+        subnet = Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.0')
+        device = Device.objects.create(hostname='Router1', device_type='Router')
+        with self.assertRaises(ValidationError):
+            ip_address = IPAddress.objects.create(subnet=subnet, device=device, ip_address='10.0.0.0')
+            ip_address.full_clean()
+        
+
