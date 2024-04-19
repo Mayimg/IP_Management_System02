@@ -11,22 +11,7 @@ from django import forms
 from .models import Subnet
 from ipaddress import IPv4Network
 from .models import Device
-
-def generate_subnet_masks():
-    # 255.255.255.255から始まり、0.0.0.0までのすべてのサブネットマスクを生成
-    subnet_masks = []
-    for i in range(256):
-        for j in range(i + 1):
-            # ビット列を生成
-            bits = '1' * j + '0' * (32 - j)
-            # 8ビットごとに分割して、整数に変換
-            mask_parts = [str(int(bits[k:k + 8], 2)) for k in range(0, 32, 8)]
-            # ドットで結合してサブネットマスクを生成
-            mask = '.'.join(mask_parts)
-            if mask not in subnet_masks:
-                subnet_masks.append(mask)
-    return subnet_masks
-
+from .libs import ip_validation
 
 class SubnetForm(forms.ModelForm):
     prefix_length = forms.IntegerField(label='Prefix Length', min_value=0, max_value=32)
@@ -35,26 +20,64 @@ class SubnetForm(forms.ModelForm):
         model = Subnet
         fields = ['network_address', 'prefix_length', 'description']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.prefix_length = self.initial.get('prefix_length')
+
+    def clean_network_address(self):
+        network_address = self.cleaned_data.get('network_address')
+        if network_address:
+            try:
+                ip_validation.validate_subnet(network_address)
+            except ValidationError as e:
+                raise ValidationError(e)
+        return network_address
+
+    def clean_prefix_length(self):
+        prefix_length = self.cleaned_data.get('prefix_length')
+        if prefix_length is None:
+            raise ValidationError('Prefix length is required.')
+        elif not 0 <= prefix_length <= 32:
+            raise ValidationError('Prefix length must be between 0 and 32.')
+        self.prefix_length = prefix_length
+        return prefix_length
+
+    def clean_is_network_address(self):
+        network_address = self.cleaned_data.get('network_address')
+        if network_address and self.prefix_length:
+            subnet_cidr = f'{network_address}/{self.prefix_length}'
+            if not ip_validation.is_network_address(network_address, subnet_cidr):
+                raise ValidationError(f'{network_address} is not a network address.')
+        return network_address
+
     def clean(self):
         cleaned_data = super().clean()
-        network_address = cleaned_data.get('network_address')
         prefix_length = cleaned_data.get('prefix_length')
 
-        # ここにプレフィックス長からサブネットマスクを計算するロジックを追加
-        subnet_mask = str(IPv4Network(f'0.0.0.0/{prefix_length}').netmask)
+        self.clean_prefix_length()
 
-        # バリデーション後にサブネットマスクをcleaned_dataに追加
+        subnet_mask = str(IPv4Network(f'0.0.0.0/{prefix_length}').netmask)
+        self.instance.subnet_mask = subnet_mask
+
+        self.clean_network_address()
+        self.clean_is_network_address()
+
         cleaned_data['subnet_mask'] = subnet_mask
         return cleaned_data
-
-    # フォームを保存する際には、プレフィックス長をサブネットマスクに変換して保存
+    
     def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.subnet_mask = self.cleaned_data['subnet_mask']
+        subnet = Subnet(
+            network_address=self.cleaned_data['network_address'],
+            description=self.cleaned_data['description']
+        )
+        prefix_length = self.cleaned_data['prefix_length']
+        subnet_mask = str(IPv4Network(f'0.0.0.0/{prefix_length}').netmask)
+        subnet.subnet_mask = subnet_mask
         if commit:
-            instance.save()
-        return instance
-
+            subnet.full_clean()
+            subnet.save()
+        return subnet
+    
 class IPAddressRangeForm(forms.ModelForm):
     class Meta:
         model = IPAddressRange

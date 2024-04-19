@@ -63,17 +63,32 @@ class Subnet(models.Model):
         ip_validation.validate_subnet(self.network_address)
 
     def clean_network_mask(self):
+        # print('Debug: clean_network_mask - subnet_mask:', self.subnet_mask)
         ip_validation.validate_subnet_mask(self.subnet_mask)
 
     def clean_network_address_is_network_address(self):
         if not ip_validation.is_network_address(self.network_address, f'{self.network_address}/{self.get_prefix_length()}'):
             raise ValidationError(f'{self.network_address} is not a valid network address for the subnet {self.network_address}/{self.get_prefix_length()}')
 
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     print('Debug: Subnet clean - network_address:', self.network_address)
+    #     print('Debug: Subnet clean - subnet_mask:', self.subnet_mask)
+    #     self.clean_network_address()
+    #     self.clean_network_mask()
+    #     self.clean_network_address_is_network_address()
+    #     return cleaned_data
+
     def clean(self):
         cleaned_data = super().clean()
+        # print('Debug: Subnet clean - network_address:', self.network_address)
+        # print('Debug: Subnet clean - subnet_mask:', self.subnet_mask)
         self.clean_network_address()
+        # print('Debug: Subnet clean - after clean_network_address')
         self.clean_network_mask()
+        # print('Debug: Subnet clean - after clean_network_mask')
         self.clean_network_address_is_network_address()
+        # print('Debug: Subnet clean - after clean_network_address_is_network_address')
         return cleaned_data
 
 
