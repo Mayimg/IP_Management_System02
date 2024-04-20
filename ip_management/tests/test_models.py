@@ -106,5 +106,18 @@ class IPAddressModelTest(TestCase):
         with self.assertRaises(ValidationError):
             ip_address = IPAddress.objects.create(subnet=subnet, device=device, ip_address='10.0.0.0')
             ip_address.full_clean()
-        
+
+    def test_ip_broadcast_address(self):
+        subnet = Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.0')
+        device = Device.objects.create(hostname='Router1', device_type='Router')
+        with self.assertRaises(ValidationError):
+            ip_address = IPAddress.objects.create(subnet=subnet, device=device, ip_address='10.255.255.255')
+            ip_address.full_clean()
+
+    def test_ip_address_unique_together(self):
+        subnet = Subnet.objects.create(network_address='10.0.0.0', subnet_mask='255.0.0.0') 
+        device = Device.objects.create(hostname='Router1', device_type='Router')
+        IPAddress.objects.create(subnet=subnet, device=device, ip_address='10.0.0.1')
+        with self.assertRaises(IntegrityError):
+            IPAddress.objects.create(subnet=subnet, device=device, ip_address='10.0.0.1')
 

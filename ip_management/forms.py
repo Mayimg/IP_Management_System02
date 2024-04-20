@@ -20,10 +20,6 @@ class SubnetForm(forms.ModelForm):
         model = Subnet
         fields = ['network_address', 'prefix_length', 'description']
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.prefix_length = self.initial.get('prefix_length')
-
     def clean_network_address(self):
         network_address = self.cleaned_data.get('network_address')
         if network_address:
@@ -90,38 +86,36 @@ class IPAddressRangeForm(forms.ModelForm):
         end_ip_address = cleaned_data.get('end_ip_address')
 
 
-        
-    
 class IPAddressForm(forms.ModelForm):
     class Meta:
         model = IPAddress
         fields = ['device', 'subnet', 'ip_address', 'domain_name', 'description']
 
+    def clean_device(self):
+        device_instance = self.cleaned_data.get('device')
+        if not device_instance:
+            raise ValidationError('Device is required.')
+        return device_instance
+    
+    def clean_subnet(self):
+        subnet_instance = self.cleaned_data.get('subnet')  
+        if not subnet_instance:
+            raise ValidationError('Subnet is required.')
+        return subnet_instance
+    
     def clean_ip_address(self):
-        ip_address = self.cleaned_data['ip_address']
+        ip_address = self.cleaned_data.get('ip_address')
+        if not ip_address:
+            raise ValidationError('IP Address is required.')
         validate_ipv4_address(ip_address)
         return ip_address
-
+    
     def clean(self):
         cleaned_data = super().clean()
-        ip_address_input = cleaned_data.get('ip_address')
-        subnet_instance = cleaned_data.get('subnet')
 
-        if not ip_address_input or not subnet_instance:
-            raise ValidationError('サブネットとIPアドレスは必須です。')
-
-        ip_addresses = IPAddress.objects.filter(subnet=subnet_instance)
-
-        if ip_addresses.filter(ip_address=ip_address_input).exists():
-            raise ValidationError(f'{ip_address_input}はすでに登録されています。')
-
-        # サブネットのCIDR表記を作成する
-        subnet_cidr = f'{subnet_instance.network_address}/{subnet_instance.get_prefix_length()}'
-        network = ip_network(subnet_cidr)
-
-        # 入力されたIPアドレスがサブネットに含まれているか確認
-        if ip_address(ip_address_input) not in network:
-            raise ValidationError(f'{ip_address_input}は{subnet_cidr}に所属しません。')
+        self.clean_device()
+        self.clean_subnet()
+        self.clean_ip_address()
 
         return cleaned_data
 
